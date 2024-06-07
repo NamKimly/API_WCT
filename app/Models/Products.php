@@ -23,4 +23,9 @@ class Products extends Model
     {
         return $this->hasMany(Discount::class, 'product_id', 'id');
     }
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_product', 'product_id', 'promotion_id')
+            ->withPivot('is_free');
+    }
 }

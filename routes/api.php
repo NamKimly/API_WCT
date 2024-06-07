@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PromotionController;
 
 //* Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -40,6 +41,17 @@ Route::get('/query-multiple-categories', [CategoryController::class, 'queryMulti
 Route::get('/brand', [BrandController::class, 'index']);
 Route::get('/brand/{id}', [BrandController::class, 'show']);
 
+//* Promotion
+Route::get('/promotions', [PromotionController::class, 'index']);
+Route::get('/promotions/{id}', [PromotionController::class, 'show']);
+Route::post('/promotions', [PromotionController::class, 'store']);
+Route::put('/promotions/update/{id}', [PromotionController::class, 'update']);
+Route::delete('/promotions/delete/{id}', [PromotionController::class, 'destroy']);
+
+
+
+
+
 //* Authenticated and Authorize routes
 Route::group(['middleware' => ['auth:api']], function () {
    Route::get('auth/profile', [AuthController::class, 'profile']);
@@ -49,11 +61,12 @@ Route::group(['middleware' => ['auth:api']], function () {
    Route::group(['middleware' => ['auth:api', 'role:customer']], function () {
       Route::get('/cart', [CartController::class, 'viewCart']);
       Route::post('/cart/add', [CartController::class, 'addToCart']);
+      Route::post('/cart/promotion', [CartController::class, 'addPromotionToCart']);
       Route::post('cart/update-quantity', [CartController::class, 'updateQuantityByProductId']);
       Route::delete('/cart/remove/{product_id}', [CartController::class, 'removeFromCart']);
    });
 
- 
+
    //* Admin-only routes
    Route::group(['middleware' => 'role:admin'], function () {
       Route::get('/users', [AuthController::class, 'showUser']);

@@ -147,6 +147,9 @@ class CategoryController extends Controller
         $brandIds = request()->get('brand_id');
         $hasDiscount = request()->get('has_discount');
         $isLatest = request()->get('is_latest');
+        $priceMin = request()->get('price_min');
+        $priceMax = request()->get('price_max');
+        $priceCondition = request()->get('price_condition');
 
         // Initialize query builder for Products
         $query = Products::query();
@@ -178,6 +181,24 @@ class CategoryController extends Controller
         // Filter latest products (assume `is_new_arrival` is a field that indicates latest products)
         if ($isLatest) {
             $query->where('is_new_arrival', true);
+        }
+
+        // Filter by price range if provided
+        if ($priceMin !== null) {
+            $query->where('price', '>=', (float)$priceMin);
+        }
+
+        if ($priceMax !== null) {
+            $query->where('price', '<=', (float)$priceMax);
+        }
+
+        // Filter by specific price condition
+        if ($priceCondition) {
+            if ($priceCondition == 'under_300') {
+                $query->where('price', '<', 300);
+            } elseif ($priceCondition == 'above_300') {
+                $query->where('price', '>', 300);
+            }
         }
 
         // Select products.* to avoid column conflicts due to join
