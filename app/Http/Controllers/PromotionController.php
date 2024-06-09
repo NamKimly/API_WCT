@@ -67,7 +67,7 @@ class PromotionController extends Controller
         }
 
         // Add the total price to the promotion object (optional)
-        $promotion->total_price = (int) $totalPrice;
+        $promotion->total_price = (float) $totalPrice;
 
         // Return the response with the calculated total price and promotion details
         return response()->json([

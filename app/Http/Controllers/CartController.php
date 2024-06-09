@@ -83,8 +83,6 @@ class CartController extends Controller
             'totalCartPrice' => $totalCartPrice
         ], 201);
     }
-
-
     public function viewCart()
     {
         $user = JWTAuth::parseToken()->authenticate();
@@ -96,9 +94,23 @@ class CartController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
-        $transformedItems = $cart->items->map(function ($item) {
+        // Create a mapping of promotion IDs to the products that belong to those promotions in the cart
+        $promotionProducts = [];
+        foreach ($cart->items as $item) {
+            foreach ($item->product->promotions as $promotion) {
+                if (!isset($promotionProducts[$promotion->id])) {
+                    $promotionProducts[$promotion->id] = [];
+                }
+                $promotionProducts[$promotion->id][] = $item->product->id;
+            }
+        }
+
+        $transformedItems = $cart->items->map(function ($item) use ($promotionProducts) {
             $product = $item->product;
-            $finalPrice = (float) $product->price;
+            $originalPrice = (float) $product->price;
+            $finalPrice = $originalPrice;
+            $discountPercentage = 0;
+            $discountAmount = 0;
 
             // If the item is marked as free, set the final price to 0
             if ($item->is_free) {
@@ -108,12 +120,27 @@ class CartController extends Controller
                 $discount = $product->discounts->first();
                 if ($discount && isset($discount->percentage) && $discount->percentage > 0) {
                     $discountPercentage = (float) $discount->percentage;
-                    $finalPrice = $finalPrice * ((100 - $discountPercentage) / 100);
+                    $discountAmount = $originalPrice * ($discountPercentage / 100);
+                    $finalPrice = $originalPrice - $discountAmount;
                 }
             }
 
-            // Check if the product is part of a promotion and marked as free
-            $promotionIsFree = $product->promotions->first() ? $product->promotions->first()->pivot->is_free : false;
+            // Check if the product is part of a promotion and if all products in the promotion are in the cart
+            $promotionIsFree = false;
+            foreach ($product->promotions as $promotion) {
+                // Check if all products in this promotion are in the cart
+                $allPromotionProductsInCart = !array_diff(
+                    $promotion->products->pluck('id')->toArray(),
+                    $promotionProducts[$promotion->id]
+                );
+
+                if ($allPromotionProductsInCart) {
+                    // If the promotion product has is_free set to true, set the price to zero
+                    if ($promotion->pivot->is_free) {
+                        $promotionIsFree = true;
+                    }
+                }
+            }
 
             return [
                 'id' => $item->id,
@@ -131,7 +158,11 @@ class CartController extends Controller
                         'name' => $product->brand->name,
                         'logo_url' => $product->brand->logo_url,
                     ],
-                    'price' => (float) $product->price,
+                    'discount' => [
+                        'percentage' => $discountPercentage,
+                        'amount' => (float) $discountAmount,
+                    ],
+                    'price' => $originalPrice,
                     'images' => $product->images,
                     'description' => $product->description,
                     'is_new_arrival' => $product->is_new_arrival,
@@ -145,12 +176,12 @@ class CartController extends Controller
                         ];
                     }),
                 ],
-                'final_price' => $promotionIsFree ? 0 : (float) $finalPrice,
+                'final_price' => $promotionIsFree ? 0 : (float) $finalPrice * $item->quantity, // Final price is multiplied by the quantity
             ];
         });
 
         // Calculate the total cart price excluding items marked as free
-        $totalCartPrice = $transformedItems->where('is_free', false)->sum('final_price');
+        $totalCartPrice = $transformedItems->where('final_price', '>', 0)->sum('total_price');
 
         return response()->json([
             'cart' => [
