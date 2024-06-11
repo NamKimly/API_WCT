@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PromotionController;
 
@@ -71,6 +72,9 @@ Route::group(['middleware' => ['auth:api']], function () {
       //** Place Order */
       Route::post('/orders', [OrderController::class, 'create']);
       Route::get('/orders/{id}', [OrderController::class, 'show']);
+
+      //*Payment CheckOut
+      Route::post('/create-checkout-session', [PaymentController::class, 'createCheckoutSession']);
    });
 
 
