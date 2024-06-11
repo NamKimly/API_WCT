@@ -158,10 +158,7 @@ class CartController extends Controller
                         'name' => $product->brand->name,
                         'logo_url' => $product->brand->logo_url,
                     ],
-                    'discount' => [
-                        'percentage' => $discountPercentage,
-                        'amount' => (float) $discountAmount,
-                    ],
+                    'discount' => $discount,
                     'price' => $originalPrice,
                     'images' => $product->images,
                     'description' => $product->description,

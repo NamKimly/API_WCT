@@ -6,6 +6,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PromotionController;
 
@@ -64,6 +65,12 @@ Route::group(['middleware' => ['auth:api']], function () {
       Route::post('/cart/promotion', [CartController::class, 'addPromotionToCart']);
       Route::post('cart/update-quantity', [CartController::class, 'updateQuantityByProductId']);
       Route::delete('/cart/remove/{product_id}', [CartController::class, 'removeFromCart']);
+
+
+
+      //** Place Order */
+      Route::post('/orders', [OrderController::class, 'create']);
+      Route::get('/orders/{id}', [OrderController::class, 'show']);
    });
 
 
@@ -92,5 +99,12 @@ Route::group(['middleware' => ['auth:api']], function () {
       Route::post('/brand', [BrandController::class, 'store']);
       Route::put('/brand/{id}', [BrandController::class, 'update']);
       Route::delete('/brand/{id}', [BrandController::class, 'destroy']);
+
+
+      //* Order Approval
+      Route::get('/orders/approve/detail', [OrderController::class, 'index']);
+      Route::get('/orders/status/find', [OrderController::class, 'filterStatus']);
+      Route::post('orders/{id}/approve', [OrderController::class, 'approve']);
+      Route::post('orders/{id}/reject', [OrderController::class, 'reject']);
    });
 });
