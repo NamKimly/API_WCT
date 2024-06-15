@@ -14,13 +14,15 @@ class CategoriesTableSeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Small Kitchen Appliance',
-            'Cookware',
-            'Large Appliance',
-            'Cooking and Heating',
-            'Floor care and Garment',
-            'LED TV and Audio',
-            'Personal Care',
+            'Refrigerator',
+            'Oven',
+            'Rice Cooker',
+            'Blender',
+            'Air Fryer',
+            'Electric Kettle',
+            'Microwave',
+            'Coffee Maker',
+            'Electric Griddle',
         ];
 
         foreach ($categories as $category) {

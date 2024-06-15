@@ -18,17 +18,10 @@ class BrandTableSeeder extends Seeder
                 'name' => 'Sony',
                 'logo_url' => 'https://brandslogos.com/wp-content/uploads/images/large/sony-logo-1.png',
             ],
-
         ];
 
-        // Insert brand data into the brands table
         foreach ($brands as $brand) {
-            Brand::create([
-                'name' => $brand['name'],
-                'logo_url' => $brand['logo_url'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            Brand::create($brand);
         }
     }
 }

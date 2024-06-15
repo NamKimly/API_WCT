@@ -14,12 +14,12 @@ class ProductsTableSeeder extends Seeder
     public function run(): void
     {
         Products::create([
-            'name' => 'Sample Product 1',
-            'category_id' => 1, // Ensure this ID exists in your categories table
-            'brand_id' => 1,    // Ensure this ID exists in your brands table
-            'price' => 100,
-            'images' => 'sample1.jpg',
-            'description' => 'Sample description for product 1'
+            'name' => 'BRAVIA',
+            'category_id' => 2,
+            'brand_id' => 1,
+            'price' => 300.99,
+            'images' => 'https://d1ncau8tqf99kp.cloudfront.net/converted/111973_original_local_1200x1050_v3_converted.webp',
+            'description' => 'Indulge in the rich aroma and robust flavor of our carefully curated coffee blend. Sourced from the finest beans around the world, our coffee offers a delightful balance of boldness and smoothness with every sip.'
         ]);
     }
 }
