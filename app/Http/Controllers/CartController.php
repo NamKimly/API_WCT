@@ -265,4 +265,28 @@ class CartController extends Controller
 
         return response()->json(['message' => 'Item removed from cart', 'totalCartPrice' => $totalCartPrice], 200);
     }
+
+
+
+    public function removeAllFromCart()
+    {
+        // Authenticate the user
+        $user = JWTAuth::parseToken()->authenticate();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+        // Retrieve the user's cart
+        $cart = Cart::where('user_id', $user->id)->first();
+
+        if (!$cart) {
+            return response()->json(['message' => 'Cart not found'], 404);
+        }
+
+        // Delete all items in the cart
+        $cart->items()->delete();
+
+        return response()->json(['message' => 'All items removed from cart'], 200);
+    }
 }

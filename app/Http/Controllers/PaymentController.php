@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Providers\StripeService;
 use Illuminate\Http\Request;
+use App\Models\Order;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class PaymentController extends Controller
 {
@@ -26,10 +28,32 @@ class PaymentController extends Controller
             'cart_items.*.price' => 'required|numeric|min:0',
         ]);
 
-        $order = $request->all();
+        // Get the authenticated user
+        $user = JWTAuth::parseToken()->authenticate();
+
+        // Create the order first
+        $order = Order::create([
+            'user_id' => $user->id,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'address' => $request->address,
+            'status' => 'pending',
+            'total' => array_reduce($request->cart_items, function ($carry, $item) {
+                return $carry + ($item['price'] * $item['quantity']);
+            }, 0),
+        ]);
+
+        // Add order items
+        foreach ($request->cart_items as $item) {
+            $order->orderItems()->create([
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+        }
 
         try {
-            $session = $this->stripeService->createCheckoutSession($order);
+            $session = $this->stripeService->createCheckoutSession(array_merge($request->all(), ['order_id' => $order->id]));
 
             return response()->json(['url' => $session->url]);
         } catch (\Exception $e) {

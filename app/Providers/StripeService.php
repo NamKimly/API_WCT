@@ -21,16 +21,19 @@ class StripeService
                'price_data' => [
                   'currency' => 'usd',
                   'product_data' => [
-                     'name' => $item['product_name'], // Ensure this field exists in your order items
+                     'name' => $item['product_name'],
                   ],
-                  'unit_amount' => $item['price'] * 100, // Convert to cents
+                  'unit_amount' => $item['price'] * 100,
                ],
                'quantity' => $item['quantity'],
             ];
          }, $order['cart_items']),
          'mode' => 'payment',
-         'success_url' => 'http://localhost:5173/payment/success',
+         'success_url' => 'http://localhost:5173/payment/success?session_id={CHECKOUT_SESSION_ID}&status=success',
          'cancel_url' => 'http://localhost:5173/payment/cancel',
+         'metadata' => [
+            'order_id' => $order['order_id'],
+         ],
       ]);
    }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\WebHookController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PromotionController;
@@ -51,6 +52,8 @@ Route::put('/promotions/update/{id}', [PromotionController::class, 'update']);
 Route::delete('/promotions/delete/{id}', [PromotionController::class, 'destroy']);
 
 
+Route::get('/orders/total-by-period', [OrderController::class, 'getTotalOrdersByPeriod']);
+Route::get('/orders/trending-products', [OrderController::class, 'getTrendingProducts']);
 
 
 
@@ -66,21 +69,24 @@ Route::group(['middleware' => ['auth:api']], function () {
       Route::post('/cart/promotion', [CartController::class, 'addPromotionToCart']);
       Route::post('cart/update-quantity', [CartController::class, 'updateQuantityByProductId']);
       Route::delete('/cart/remove/{product_id}', [CartController::class, 'removeFromCart']);
-
+      Route::delete('/cart/clear', [CartController::class, 'removeAllFromCart']);
 
 
       //** Place Order */
       Route::post('/orders', [OrderController::class, 'create']);
       Route::get('/orders/{id}', [OrderController::class, 'show']);
+      Route::get('/orders/user/{id}', [OrderController::class, 'showByUserId']);
 
       //*Payment CheckOut
       Route::post('/create-checkout-session', [PaymentController::class, 'createCheckoutSession']);
+      Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
    });
 
 
    //* Admin-only routes
    Route::group(['middleware' => 'role:admin'], function () {
       Route::get('/users', [AuthController::class, 'showUser']);
+
 
       //* Product API
       Route::group(['prefix' => 'products'], function () {

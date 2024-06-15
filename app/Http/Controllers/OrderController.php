@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\DB;
+
 
 
 class OrderController extends Controller
@@ -91,6 +93,18 @@ class OrderController extends Controller
         $order = Order::with('orderItems')->findOrFail($id);
         return response()->json($order);
     }
+    public function showByUserId($userId)
+    {
+        // Retrieve orders by user ID with their associated order items and products
+        $orders = Order::where('user_id', $userId)
+            ->with(['orderItems.product', 'orderItems.product.brand', 'orderItems.product.category'])
+            ->get();
+
+        return response()->json([
+            "orders" =>  $orders
+        ]);
+    }
+
 
     public function updateStatus($id, $status)
     {
@@ -103,6 +117,7 @@ class OrderController extends Controller
         $order->status = $status;
         $order->save();
 
+
         return response()->json(['message' => "Order $status successfully"]);
     }
 
@@ -114,5 +129,64 @@ class OrderController extends Controller
     public function reject($id)
     {
         return $this->updateStatus($id, self::STATUS_REJECTED);
+    }
+
+
+
+
+    //* Order Period 
+    public function getTotalOrdersByPeriod(Request $request)
+    {
+        // Validate the period parameter
+        $validatedData = $request->validate([
+            'period' => 'required|in:day,month,year'
+        ]);
+
+        $period = $validatedData['period'];
+
+        switch ($period) {
+            case 'day':
+                $orders = Order::select(
+                    DB::raw('DATE(created_at) as period'),
+                    DB::raw('DAY(created_at) as day'),
+                    DB::raw('count(*) as total')
+                )
+                    ->groupBy(DB::raw('DATE(created_at)'), DB::raw('DAY(created_at)'))
+                    ->get();
+                break;
+            case 'month':
+                $orders = Order::select(
+                    DB::raw('DATE_FORMAT(created_at, "%Y-%m") as period'),
+                    DB::raw('MONTH(created_at) as month'),
+                    DB::raw('count(*) as total')
+                )
+                    ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'), DB::raw('MONTH(created_at)'))
+                    ->get();
+                break;
+            case 'year':
+                $orders = Order::select(
+                    DB::raw('YEAR(created_at) as period'),
+                    DB::raw('count(*) as total')
+                )
+                    ->groupBy(DB::raw('YEAR(created_at)'))
+                    ->get();
+                break;
+            default:
+                return response()->json(['error' => 'Invalid period'], 400);
+        }
+
+        return response()->json(['orders_period' => $orders]);
+    }
+
+    public function getTrendingProducts()
+    {
+        $trendingProducts = OrderItem::select('product_id', DB::raw('count(*) as order_count'))
+            ->groupBy('product_id')
+            ->havingRaw('count(*) >= 5')
+            ->with('product')
+            ->orderBy('order_count', 'desc')
+            ->get();
+
+        return response()->json(['trending_products' => $trendingProducts]);
     }
 }
